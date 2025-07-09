@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="section">
+    <div class="container">
+        <h2>Admin Dashboard</h2>
+
+        <h2>Customer Details</h2>
+<table>
+    <tr>
+        <th>Name</th>
+        <th>Email</th>
+    </tr>
+    {% for customer in customers %}
+    <tr>
+        <td>{{ customer.username }}</td>
+        <td>{{ customer.email }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+
+        <h3>Stock Management</h3>
+        <table>
+            <tr><th>Product</th><th>Type</th><th>Qty</th><th>Update</th></tr>
+            {% for product in products %}
+            <tr>
+                <td>{{ product.name }}</td>
+                <td>{{ product.category }}</td>
+                <td>{{ product.stock }}</td>
+                <td><button>Edit</button></td>
+            </tr>
+            {% endfor %}
+        </table>
+
+        <h3>Order Records</h3>
+        <table>
+            <tr><th>Order ID</th><th>Customer</th><th>Status</th><th>Amount</th></tr>
+            {% for order in orders %}
+            <tr><td>{{ order.id }}</td><td>{{ order.user }}</td><td>{{ order.status }}</td><td>₹{{ order.total }}</td></tr>
+            {% endfor %}
+        </table>
+        <h3>Customer Feedback</h3>
+<table border="1" width="100%" style="margin-top: 10px;">
+    <tr>
+        <th>Customer</th>
+        <th>Feedback</th>
+        <th>Date</th>
+    </tr>
+    {% for f in feedbacks %}
+    <tr>
+        <td>{{ f.user.username }}</td>
+        <td>{{ f.content }}</td>
+        <td>{{ f.timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="section">
+    <div class="container">
+        <h2>Track Your Order</h2>
+
+        <p>Order ID: <strong>{{ order.id }}</strong></p>
+        <p>Status: <strong>{{ order.status }}</strong></p>
+
+    </div>
+</section>
+{% endblock %}

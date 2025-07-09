@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="section">
+    <div class="container">
+        <h2>Our Services</h2>
+
+        {% if session.get('is_admin') %}
+            <!-- Admin Services -->
+            <ul>
+                <li>View All Customers</li>
+                <li>Manage Stock</li>
+                <li>View Orders</li>
+                <li>Product Upload and Edit</li>
+            </ul>
+        {% elif session.get('user_id') %}
+            <!-- Customer Services -->
+            <ul>
+                <li>Browse Pickles and Snacks</li>
+                <li>Add to Cart</li>
+                <li>Place Order</li>
+                <li>Track Order</li>
+            </ul>
+        {% else %}
+            <!-- If not logged in -->
+            <p>Please <a href="{{ url_for('login') }}">login</a> or <a href="{{ url_for('register') }}">register</a> to view services.</p>
+        {% endif %}
+
+    </div>
+</section>
+{% endblock %}

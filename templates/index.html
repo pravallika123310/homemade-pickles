@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<section class="hero">
+    <div id="home" class="container">
+        <h2>Taste the Best – Homemade Goodness in Every Bite!</h2>
+        <p>Discover traditional and modern pickles & snacks with authentic taste made at home.</p>
+    </div>
+</section>
+
+<section id="about" class="section">
+    <div class="container">
+        <h2>About Us</h2>
+        <p>
+            At HomeMade Pickles & Snacks, we bring to you the flavors of tradition packed with love and hygiene. 
+            From spicy pickles that remind you of grandma’s kitchen to crispy, fresh snacks for every mood — our homemade recipes are passed through generations and crafted with care.
+            We use fresh ingredients, no preservatives, and ensure utmost cleanliness in our process. Whether you prefer tangy mango pickle or crunchy murukku, we’ve got your cravings covered!
+            Your satisfaction and health are our priority. With both vegetarian and non-vegetarian options, our products cater to every taste bud.
+        </p>
+    </div>
+</section>
+
+<section id="services" class="section">
+    <div class="container">
+        <h2>Our Products & Services</h2>
+        <div class="cards">
+            <div class="card">
+                <h3>Vegetarian Pickles</h3>
+                <p>Mango, Lemon, Garlic, Mixed Veg and more</p>
+                <button onclick="showLogin()">Order Now</button>
+            </div>
+            <div class="card">
+                <h3>Non-Veg Pickles</h3>
+                <p>Chicken, Fish, Mutton and more</p>
+                <button onclick="showLogin()">Order Now</button>
+            </div>
+            <div class="card">
+                <h3>Snacks</h3>
+                <p>Murukku, Mixture, Chips, Balls and more</p>
+                <button onclick="showLogin()">Order Now</button>
+            </div>
+        </div>
+
+        <div id="login-section" style="display:none;">
+            <h3>Please Login or Register to Continue</h3>
+            <a href="/login" class="btn">Login</a>
+            <a href="/register" class="btn">Register</a>
+        </div>
+    </div>
+</section>
+
+<script>
+    function showLogin() {
+        document.getElementById("login-section").style.display = "block";
+    }
+    const mainhome = document.getElementById("main-home");
+const home = document.getElementById("home");
+const mainabout = document.getElementById("main-about");
+const about = document.getElementById("about");
+
+    const mainservices= document.getElementById("main-services");
+const services = document.getElementById("services");
+
+mainabout.addEventListener("click", function() {
+    about.style.display = "block";
+    services.style.display = "none";
+    home.style.display="none";
+});
+
+mainservices.addEventListener("click", function() {
+    services.style.display = "block";
+    home.style.display="none";
+     about.style.display = "none";
+});
+</script>
+{% endblock %}
+<div id="login-section" style="display:none;">
+    <h3>Please Login or Register to Continue</h3>
+    <a href="/login" class="btn">Login</a>
+    <a href="/register" class="btn">Register</a>
+</div>
+

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>HomeMade Pickles & Snacks</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500&family=Open+Sans&display=swap" rel="stylesheet">
+</head>
+<body>
+    <body>
+    <header>
+        <div class="container">
+            <h1>HomeMade Pickles & Snacks</h1>
+            <nav>
+                <a id="main-home" href="/">Home</a>
+                <a id="main-about" href="#about">About</a>
+                <a id="main-services" href="#services">Services</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- 🟡 Flash messages here -->
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+        <ul class="flashes" style="list-style: none; padding: 10px; background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; margin: 20px;">
+        {% for message in messages %}
+            <li>{{ message }}</li>
+        {% endfor %}
+        </ul>
+    {% endif %}
+    {% endwith %}
+
+    <!-- Main page content -->
+    {% block content %}{% endblock %}
+
+    <footer>
+        <p>&copy; 2025 HomeMade Pickles & Snacks. All rights reserved.</p>
+    </footer>
+</body>
+
+    
+</body>
+</html>

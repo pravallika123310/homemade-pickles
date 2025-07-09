@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="section">
+    <div class="container">
+        <div class="box p-6" style="max-width: 700px; margin: auto;">
+            <h2 class="title is-3 has-text-centered mb-6">🛒 Checkout</h2>
+
+            <form method="POST" action="{{ url_for('process_checkout') }}">
+
+                <!-- Delivery Address -->
+                <div class="field">
+                    <label style="font-weight:bold;font-size:25px;margin:10px" class="label is-large">🏠 Delivery Address</label>
+                    <div class="control">
+                        <textarea style="width:500px;margin:10px" class="textarea is-large is-fullwidth is-rounded" 
+                                  name="address" 
+                                  placeholder="Enter your complete address" 
+                                  rows="5" required></textarea>
+                    </div>
+                </div>
+
+                <!-- Payment Method -->
+                <div class="field mt-5">
+                    <label style="font-weight:bold;font-size:25px;padding:10px" class="label is-large">💳 Payment Method</label>
+                    <div class="control">
+                        <div style="width:500px;display:flex;justify-content:center;height:50px;margin-left:15%" class="select is-large is-fullwidth is-rounded">
+                            <select name="payment_method" required>
+                                <option value="">-- Choose Payment Method --</option>
+                                <option value="Cash on Delivery">Cash on Delivery</option>
+                                <option value="UPI">UPI</option>
+                                <option value="Credit/Debit Card">Credit/Debit Card</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="field mt-6 has-text-centered">
+                    <button class="button is-success is-large is-rounded px-6">
+                        ✅ Proceed to Payment
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}

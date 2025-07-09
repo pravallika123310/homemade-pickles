@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="section">
+    <div class="container">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Select Your Favorite Products</h2>
+            <a href="/cart" class="button" style="background-color: green; color: white; padding: 10px 20px; border-radius: 5px;">🛒 Your Orders</a>
+        </div>
+
+        <!-- Filter Buttons -->
+        <div class="filter-buttons" style="margin: 20px 0;">
+            <button onclick="filterProducts('all')" style="margin-right: 10px;">All</button>
+            <button onclick="filterProducts('veg')" style="margin-right: 10px;">Vegetarian Pickles</button>
+            <button onclick="filterProducts('non_veg')" style="margin-right: 10px;">Non-Veg Pickles</button>
+            <button onclick="filterProducts('snack')">Snacks</button>
+        </div>
+
+        <!-- Product Cards (Loaded from hardcoded demo products) -->
+        <div class="cards" id="productContainer" style="display: flex; flex-wrap: wrap; gap: 20px;"></div>
+    </div>
+</section>
+
+<script>
+    const demoProducts = [
+        {"name": "Mango Pickle", "description": "Spicy and tangy mango pickle.", "price": 100, "category": "veg", "stock": 50},
+        {"name": "Lemon Pickle", "description": "Sour lemon pickle with aromatic spices.", "price": 90, "category": "veg", "stock": 40},
+        {"name": "Garlic Pickle", "description": "Bold garlic flavor in oil.", "price": 110, "category": "veg", "stock": 30},
+        {"name": "Ginger Pickle", "description": "Tangy ginger and spice blend.", "price": 95, "category": "veg", "stock": 35},
+        {"name": "Tomato Pickle", "description": "South Indian style tomato pickle.", "price": 85, "category": "veg", "stock": 40},
+        {"name": "Amla Pickle", "description": "Healthy gooseberry pickle.", "price": 105, "category": "veg", "stock": 25},
+        {"name": "Mixed Veg Pickle", "description": "Combination of various vegetables.", "price": 120, "category": "veg", "stock": 45},
+        {"name": "Green Chilli Pickle", "description": "Hot and spicy green chili delight.", "price": 70, "category": "veg", "stock": 20},
+        {"name": "Curry Leaf Pickle", "description": "Unique flavor with curry leaves.", "price": 100, "category": "veg", "stock": 15},
+        {"name": "Carrot Pickle", "description": "Crunchy carrot in mustard oil.", "price": 90, "category": "veg", "stock": 30},
+
+        {"name": "Chicken Pickle", "description": "Spicy and soft chicken chunks.", "price": 150, "category": "non_veg", "stock": 25},
+        {"name": "Fish Pickle", "description": "Kerala-style fish pickle.", "price": 140, "category": "non_veg", "stock": 20},
+        {"name": "Mutton Pickle", "description": "Rich goat meat in masala.", "price": 160, "category": "non_veg", "stock": 15},
+        {"name": "Prawn Pickle", "description": "Tangy shrimp pickle.", "price": 155, "category": "non_veg", "stock": 18},
+        {"name": "Egg Pickle", "description": "Hard-boiled eggs in spicy blend.", "price": 130, "category": "non_veg", "stock": 12},
+        {"name": "Crab Pickle", "description": "For crab lovers, spicy twist.", "price": 170, "category": "non_veg", "stock": 10},
+        {"name": "Dry Fish Pickle", "description": "Salted dry fish and spices.", "price": 145, "category": "non_veg", "stock": 20},
+        {"name": "Quail Pickle", "description": "Rare spicy bird meat pickle.", "price": 180, "category": "non_veg", "stock": 8},
+        {"name": "Turkey Pickle", "description": "Festive flavor in a bottle.", "price": 165, "category": "non_veg", "stock": 10},
+        {"name": "Beef Pickle", "description": "South-style spicy beef chunks.", "price": 175, "category": "non_veg", "stock": 5},
+
+        {"name": "Murukku", "description": "Classic crunchy spiral snack.", "price": 60, "category": "snack", "stock": 100},
+        {"name": "Mixture", "description": "Spicy mix of lentils and sev.", "price": 70, "category": "snack", "stock": 100},
+        {"name": "Chakli", "description": "Spiral savory delight.", "price": 65, "category": "snack", "stock": 80},
+        {"name": "Thattai", "description": "Crispy and round rice crackers.", "price": 55, "category": "snack", "stock": 75},
+        {"name": "Ribbon Pakoda", "description": "Flat and spicy deep-fried snack.", "price": 50, "category": "snack", "stock": 90},
+        {"name": "Karasev", "description": "Peppery crunchy snack.", "price": 60, "category": "snack", "stock": 95},
+        {"name": "Banana Chips", "description": "Kerala-style banana crisps.", "price": 45, "category": "snack", "stock": 100},
+        {"name": "Potato Chips", "description": "Thin, salty and crunchy.", "price": 50, "category": "snack", "stock": 100},
+        {"name": "Boondi", "description": "Tiny fried gram balls.", "price": 40, "category": "snack", "stock": 100},
+        {"name": "Namak Para", "description": "Diamond-cut crispy snack.", "price": 55, "category": "snack", "stock": 80},
+        {"name": "Chekkalu", "description": "Rice flour crackers with cumin.", "price": 60, "category": "snack", "stock": 70},
+        {"name": "Omapodi", "description": "Thin crunchy sev variety.", "price": 45, "category": "snack", "stock": 85},
+        {"name": "Ragi Chips", "description": "Healthy finger millet snack.", "price": 65, "category": "snack", "stock": 50},
+        {"name": "Peanut Chikki", "description": "Sweet snack with jaggery.", "price": 40, "category": "snack", "stock": 60},
+        {"name": "Kara Boondi", "description": "Spicy boondi with curry leaves.", "price": 50, "category": "snack", "stock": 90}
+    ];
+
+    function displayProducts(category) {
+        const container = document.getElementById('productContainer');
+        container.innerHTML = '';
+        demoProducts.forEach((product, index) => {
+            if (category === 'all' || product.category === category) {
+                const card = document.createElement('div');
+                card.className = `card product ${product.category}`;
+                card.style.cssText = "border: 1px solid #ccc; padding: 15px; border-radius: 10px; width: 250px;";
+
+                card.innerHTML = `
+                    <form action="/add-to-cart" method="POST">
+                        <h3>${product.name}</h3>
+                        <p>${product.description}</p>
+                        <p><strong>₹${product.price}</strong></p>
+
+                        <input type="hidden" name="name" value="${product.name}">
+                        <input type="hidden" name="price" value="${product.price}">
+                        <input type="hidden" name="description" value="${product.description}">
+                        <input type="hidden" name="category" value="${product.category}">
+                        <label>Qty:</label>
+                        <input type="number" name="quantity" value="1" min="1" style="width: 60px;"><br><br>
+
+                        <button type="submit" class="button"
+                            style="background-color: #ff6600; color: white; padding: 5px 10px; border: none; border-radius: 5px;">
+                            Add to Cart
+                        </button>
+                    </form>
+                `;
+
+                container.appendChild(card);
+            }
+        });
+    }
+
+    function filterProducts(category) {
+        displayProducts(category);
+    }
+
+    window.onload = () => filterProducts('all');
+</script>
+{% endblock %}

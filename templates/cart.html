@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="section">
+    <div class="container">
+        <h2 class="title">🛒 Your Cart</h2>
+
+        {% if cart %}
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+            <thead>
+                <tr style="background-color: #f5f5f5;">
+                    <th style="padding: 10px; border: 1px solid #ccc;">Product</th>
+                    <th style="padding: 10px; border: 1px solid #ccc;">Price</th>
+                    <th style="padding: 10px; border: 1px solid #ccc;">Qty</th>
+                    <th style="padding: 10px; border: 1px solid #ccc;">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in cart %}
+                <tr>
+                    <td style="padding: 10px; border: 1px solid #ccc;">{{ item.product.name }}</td>
+                    <td style="padding: 10px; border: 1px solid #ccc;">₹{{ item.product.price }}</td>
+                    <td style="padding: 10px; border: 1px solid #ccc;">{{ item.quantity }}</td>
+                    <td style="padding: 10px; border: 1px solid #ccc;">₹{{ item.product.price * item.quantity }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <h3>Total: ₹{{ total_price }}</h3>
+        <a href="{{ url_for('checkout') }}" class="button is-primary">Proceed to Checkout</a>
+        {% else %}
+        <p>Your cart is empty. <a href="{{ url_for('products') }}">Go back to products</a>.</p>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
