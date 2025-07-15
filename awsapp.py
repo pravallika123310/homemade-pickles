@@ -1,23 +1,27 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, flash
 from werkzeug.security import generate_password_hash, check_password_hash
 import boto3
 from datetime import datetime
-import json,uuid
+import json, uuid
 from decimal import Decimal
+from functools import wraps
 
+# ----------- App Setup -----------
 app = Flask(__name__)
 app.secret_key = 'your_very_secret_key_12345'  # Change for production!
 
-dynamodb = boto3.resource('dynamodb', region_name= 'us-east-1')  # e.g., 'us-east-1'
+# ----------- AWS Resources -----------
+dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
+sns = boto3.client('sns', region_name='us-east-1')
+SNS_TOPIC_ARN = 'arn:aws:sns:us-east-1:123456789012:PickleOrderUpdates'  # Replace with your actual ARN
+
 users_table = dynamodb.Table('Users')
 orders_table = dynamodb.Table('Orders')
 products_table = dynamodb.Table('Products')
 cart_table = dynamodb.Table('CartItems')
+feedback_table = dynamodb.Table('Feedback')
 
-# # ================== TEMPORARY DATA STORES ==================
-
-
-# ---------- Auth Helpers ----------
+# ----------- Auth Helpers -----------
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -26,7 +30,7 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-# ---------- Routes ----------
+# ----------- Routes -----------
 @app.route('/')
 def home():
     return render_template('index.html')
@@ -56,6 +60,7 @@ def register():
         flash("Registration successful! Please log in.", "success")
         return redirect(url_for('login'))
     return render_template('register.html')
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -74,6 +79,7 @@ def login():
             flash("Invalid email or password.", "error")
             return redirect(url_for('login'))
     return render_template('login.html')
+
 @app.route('/logout')
 def logout():
     session.clear()
@@ -85,7 +91,6 @@ def logout():
 def dashboard():
     user_id = session['user_id']
 
-    # Retrieve the user info from DynamoDB using scan + filter
     response = users_table.scan(
         FilterExpression='user_id = :uid',
         ExpressionAttributeValues={':uid': user_id}
@@ -108,13 +113,12 @@ def dashboard():
             ExpressionAttributeValues={':r': 'admin'}
         )['Items']
 
-        # You can add products and orders if you create respective DynamoDB tables
         return render_template('admin_dashboard.html',
                                customers=customers,
                                admins=admins,
-                               products=[],  # Placeholder
-                               orders=[],    # Placeholder
-                               feedbacks=[]) # Placeholder
+                               products=[],
+                               orders=[],
+                               feedbacks=[])
     else:
         user_orders = orders_table.scan(
             FilterExpression='user_id = :uid',
@@ -138,7 +142,6 @@ def add_to_cart():
     price = float(request.form.get('price'))
     quantity = int(request.form.get('quantity', 1))
 
-    # Check if cart item exists
     response = cart_table.get_item(Key={'user_id': user_id, 'product_id': product_id})
     existing_item = response.get('Item')
 
@@ -162,29 +165,21 @@ def add_to_cart():
 
     flash("Item added to cart.", "success")
     return redirect(url_for('products'))
+
 @app.route('/cart')
 @login_required
 def cart():
     user_id = session['user_id']
-
-    # Fetch cart items for this user
     response = cart_table.query(
         KeyConditionExpression=boto3.dynamodb.conditions.Key('user_id').eq(user_id)
     )
     cart_items = response.get('Items', [])
-
-    # Calculate total price
     total_price = sum(item['price'] * item['quantity'] for item in cart_items)
-
     return render_template('cart.html', cart=cart_items, total_price=total_price)
+
 @app.route('/checkout')
 @login_required
 def checkout():
-    user_id = session['user_id']
-    cart_items = CartItem.query.filter_by(user_id=user_id).all()
-    if not cart_items:
-        flash("Your cart is empty.", "info")
-        return redirect(url_for('products'))
     return render_template('address_form.html')
 
 @app.route('/process-checkout', methods=['POST'])
@@ -193,7 +188,6 @@ def process_checkout():
     user_id = session['user_id']
     address = request.form.get('address')
 
-    # Fetch cart items from DynamoDB
     response = cart_table.query(
         KeyConditionExpression=boto3.dynamodb.conditions.Key('user_id').eq(user_id)
     )
@@ -203,10 +197,7 @@ def process_checkout():
         flash("Address is required and cart must not be empty.", "error")
         return redirect(url_for('checkout'))
 
-    # Calculate total
     total = sum(item['price'] * item['quantity'] for item in cart_items)
-
-    # Create order data
     order_id = str(uuid.uuid4())
     timestamp = datetime.now().isoformat()
 
@@ -219,17 +210,24 @@ def process_checkout():
         'timestamp': timestamp
     })
 
-    # Clear cart items (delete one by one)
+    # --- SNS Notification ---
+    message = f"Order #{order_id} placed by user {user_id}. Total: ₹{total}"
+    sns.publish(
+        TopicArn=SNS_TOPIC_ARN,
+        Message=message,
+        Subject='New Pickle Order Notification'
+    )
+
     for item in cart_items:
         cart_table.delete_item(Key={
             'user_id': user_id,
             'product_id': item['product_id']
         })
 
-    flash("Order placed successfully!", "success")
+    flash("Order placed successfully! Notification sent.", "success")
     return redirect(url_for('payment_success', order_id=order_id))
 
-@app.route('/payment-success/<int:order_id>')
+@app.route('/payment-success/<string:order_id>')
 @login_required
 def payment_success(order_id):
     return render_template('payment_success.html', order_id=order_id)
@@ -271,6 +269,6 @@ def feedback():
 
     return render_template('feedback.html')
 
-# ---------- Run ----------
+# ----------- Run App -----------
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True) 
+    app.run(host='0.0.0.0', port=5000, debug=True)
