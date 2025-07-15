@@ -87,6 +87,28 @@
             text-decoration: none;
         }
 
+        .flash-message {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-weight: bold;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .flash-message.error {
+            background-color: #f76c6c;
+            color: white;
+        }
+
+        .flash-message.success {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
     </style>
 </head>
 <body>
@@ -101,6 +123,20 @@
     </div>
 
     <div class="container">
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="flash-message {{ category }}">
+                {{ message }}
+                {% if category == "error" %}
+                  <br><a href="{{ url_for('login') }}" style="color: #fff; text-decoration: underline;"></a>
+                {% endif %}
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
         <h2>Register</h2>
         <form method="POST" action="/register">
             <input type="text" name="username" placeholder="Username" required>
@@ -115,6 +151,7 @@
 
             <button type="submit">Register</button>
         </form>
+
         <div class="login-link">
             Already have an account? <a href="/login">Login here.</a>
         </div>
