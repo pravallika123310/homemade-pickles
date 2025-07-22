@@ -3,7 +3,6 @@
 <section class="section">
     <div class="container">
         <h2 class="title">🛒 Your Cart</h2>
-
         {% if cart %}
         <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
             <thead>
@@ -32,7 +31,6 @@
                 {% endfor %}
             </tbody>
         </table>
-
         <h3>Total: ₹{{ total_price }}</h3>
         <a href="{{ url_for('checkout') }}" class="button is-primary">Proceed to Checkout</a>
         {% else %}

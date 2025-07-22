@@ -3,7 +3,6 @@
 <section class="section">
     <div class="container">
         <h2>Welcome, {{ user.username }}</h2>
-
         <h3>Your Orders</h3>
         <table>
             <tr><th>Order ID</th><th>Status</th><th>Total</th></tr>
@@ -11,7 +10,6 @@
             <tr><td>{{ order.id }}</td><td>{{ order.status }}</td><td>₹{{ order.total }}</td></tr>
             {% endfor %}
         </table>
-
         <a href="/products" class="btn">Order More</a>
         <a href="/cart" class="btn">View Cart</a>
     </div>

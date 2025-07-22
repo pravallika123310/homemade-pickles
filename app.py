@@ -5,7 +5,6 @@ from functools import wraps
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 
-
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///homemade_pickles.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -14,7 +13,6 @@ app.secret_key = 'your-secret-key'
 db.init_app(app)
 migrate = Migrate(app, db)
 
-# ---------- Auth Helpers ----------
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -23,7 +21,6 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-# ---------- Routes ----------
 @app.route('/')
 def home():
     return render_template('index.html')
@@ -51,7 +48,7 @@ def register():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        email = request.form.get('email')  # safer than ['email']
+        email = request.form.get('email')  
         password = request.form.get('password')
         user = User.query.filter_by(email=email).first()
 
@@ -231,6 +228,5 @@ def submit_rating(order_id):
     db.session.commit()
     flash("Thanks for your rating!", "success")
     return redirect(url_for('dashboard'))
-# ---------- Run ----------
 if __name__ == "__main__":
     app.run()

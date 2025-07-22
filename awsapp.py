@@ -7,23 +7,19 @@ from functools import wraps
 from decimal import Decimal
 from boto3.dynamodb.conditions import Key
 
-# ------------------- AWS Setup -------------------
 AWS_REGION = 'us-east-1'
 USERS_TABLE_NAME = 'Users'
 APPDATA_TABLE_NAME = 'AppData'
-SNS_TOPIC_ARN = "arn:aws:sns:us-east-1:123456789012:PickleOrderUpdates"  # Replace with your actual ARN
+SNS_TOPIC_ARN = "arn:aws:sns:us-east-1:123456789012:PickleOrderUpdates"  
 
-# ------------------- Flask Setup -------------------
 app = Flask(__name__)
 app.secret_key = 'your_super_secret_key_here'
 
-# ------------------- AWS Resources -------------------
 dynamodb = boto3.resource('dynamodb', region_name=AWS_REGION)
 users_table = dynamodb.Table(USERS_TABLE_NAME)
 appdata_table = dynamodb.Table(APPDATA_TABLE_NAME)
 sns = boto3.client('sns', region_name=AWS_REGION)
 
-# ------------------- Auth Helper -------------------
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -31,8 +27,6 @@ def login_required(f):
             return redirect(url_for('login'))
         return f(*args, **kwargs)
     return decorated_function
-
-# ------------------- Routes -------------------
 
 @app.route('/')
 def home():
@@ -193,7 +187,6 @@ def checkout():
 
     total = sum(item['price'] * item['quantity'] for item in cart_items)
 
-    # Store the order
     appdata_table.put_item(Item={
         'PK': f'ORDER#{order_id}',
         'SK': 'DETAILS',
@@ -205,7 +198,6 @@ def checkout():
         'timestamp': timestamp
     })
 
-    # --- SNS Notification ---
     message = f"Order #{order_id} placed by {session.get('email')}. Total: ₹{total}"
     try:
         sns.publish(
@@ -216,7 +208,6 @@ def checkout():
     except Exception as e:
         print("SNS publish failed:", str(e))
 
-    # Clear cart
     for item in cart_items:
         appdata_table.delete_item(
             Key={'PK': f'CART#{user_id}', 'SK': f"PRODUCT#{item['product_id']}"}

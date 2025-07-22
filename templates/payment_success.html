@@ -5,9 +5,7 @@
         <h2 class="title is-3">✅ Order Confirmed</h2>
         <p>Your order has been placed successfully.</p>
         <a href="{{ url_for('track_order', order_id=order_id) }}" class="button is-info is-small">Track your order</a>
-
         <hr>
-
         {% if submitted_rating %}
             <h3 class="title is-4">⭐ Your Submitted Rating</h3>
             <div>
