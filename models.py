@@ -17,6 +17,7 @@ class Product(db.Model):
     price = db.Column(db.Integer)
     category = db.Column(db.String(50))
     stock = db.Column(db.Integer)
+    ratings = db.relationship('Rating', backref='product')
 
 class CartItem(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -34,6 +35,8 @@ class Order(db.Model):
     address = db.Column(db.Text)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     user = db.relationship('User', backref='orders')
+    ratings = db.relationship('Rating', backref='order')
+    order_items = db.relationship('OrderItem', backref='order')
 
 class OrderItem(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -42,11 +45,10 @@ class OrderItem(db.Model):
     quantity = db.Column(db.Integer)
     price = db.Column(db.Float)
     product = db.relationship('Product')
-    order = db.relationship('Order', backref='items')
 
-class Feedback(db.Model):
+class Rating(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    content = db.Column(db.Text)
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
-    user = db.relationship('User')
+    product_id = db.Column(db.Integer, db.ForeignKey('product.id'))
+    order_id = db.Column(db.Integer, db.ForeignKey('order.id'))
+    stars = db.Column(db.Integer)

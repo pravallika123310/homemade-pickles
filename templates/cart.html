@@ -12,6 +12,7 @@
                     <th style="padding: 10px; border: 1px solid #ccc;">Price</th>
                     <th style="padding: 10px; border: 1px solid #ccc;">Qty</th>
                     <th style="padding: 10px; border: 1px solid #ccc;">Total</th>
+                    <th style="padding: 10px; border: 1px solid #ccc;">Action</th>
                 </tr>
             </thead>
             <tbody>
@@ -21,6 +22,12 @@
                     <td style="padding: 10px; border: 1px solid #ccc;">₹{{ item.product.price }}</td>
                     <td style="padding: 10px; border: 1px solid #ccc;">{{ item.quantity }}</td>
                     <td style="padding: 10px; border: 1px solid #ccc;">₹{{ item.product.price * item.quantity }}</td>
+                    <td style="padding: 10px; border: 1px solid #ccc;">
+                        <form action="{{ url_for('remove_from_cart') }}" method="POST" style="display:inline;">
+                            <input type="hidden" name="product_id" value="{{ item.product.id }}">
+                            <button type="submit" class="button is-small is-danger">Remove</button>
+                        </form>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>

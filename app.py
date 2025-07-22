@@ -1,7 +1,9 @@
 from flask import Flask, render_template, request, redirect, session, url_for, flash
-from models import db, User, Product, CartItem, Order, OrderItem, Feedback
+from models import db, User, Product, CartItem, Order, OrderItem , Rating
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 
 
 app = Flask(__name__)
@@ -10,6 +12,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.secret_key = 'your-secret-key'
 
 db.init_app(app)
+migrate = Migrate(app, db)
 
 # ---------- Auth Helpers ----------
 def login_required(f):
@@ -71,15 +74,23 @@ def logout():
 @login_required
 def dashboard():
     user = User.query.get(session['user_id'])
+
     if user.is_admin:
+        products = Product.query.all()
+        for product in products:
+            avg = db.session.query(db.func.avg(Rating.stars)).filter_by(product_id=product.id).scalar()
+            product.avg_rating = avg
+
+        orders = Order.query.all()
+        for order in orders:
+            rating = Rating.query.filter_by(order_id=order.id).first()
+            order.rating = rating
+
         customers = User.query.filter_by(is_admin=False).all()
         admins = User.query.filter_by(is_admin=True).all()
-        products = Product.query.all()
-        orders = Order.query.all()
-        feedbacks = Feedback.query.order_by(Feedback.timestamp.desc()).all()
 
         return render_template('admin_dashboard.html', customers=customers, admins=admins,
-                               products=products, orders=orders, feedbacks=feedbacks)
+                               products=products, orders=orders)
     else:
         orders = Order.query.filter_by(user_id=user.id).all()
         return render_template('customer_dashboard.html', user=user, orders=orders)
@@ -178,21 +189,48 @@ def track_order(order_id):
 def services():
     return render_template('services.html')
 
-@app.route('/feedback', methods=['GET', 'POST'])
+@app.route('/remove-from-cart', methods=['POST'])
 @login_required
-def feedback():
-    if request.method == 'POST':
-        content = request.form.get('content')
-        if content:
-            new_feedback = Feedback(user_id=session['user_id'], content=content)
-            db.session.add(new_feedback)
-            db.session.commit()
-            flash("Thank you for your feedback!", "success")
-            return redirect(url_for('feedback'))
-    return render_template('feedback.html')
+def remove_from_cart():
+    product_id = request.form['product_id']
+    user_id = session.get('user_id')
 
+    if not product_id or not user_id:
+        flash("Invalid request. Please try again.", "danger")
+        return redirect(url_for('cart'))
+
+    try:
+        item_to_remove = CartItem.query.filter_by(user_id=user_id, product_id=product_id).first()
+        if item_to_remove:
+            db.session.delete(item_to_remove)
+            db.session.commit()
+            flash("Item removed from your cart.", "info")
+        else:
+            flash("Item not found in your cart.", "warning")
+    except Exception as e:
+        flash(f"Error removing item: {e}", "danger")
+
+    return redirect(url_for('cart'))
+
+@app.route('/submit-rating/<int:order_id>', methods=['POST'])
+@login_required
+def submit_rating(order_id):
+    try:
+        stars = int(request.form['stars'])
+    except (ValueError, TypeError):
+        flash("Invalid rating value.", "danger")
+        return redirect(url_for('payment_success', order_id=order_id))
+
+    user_id = session['user_id']
+    order = Order.query.get_or_404(order_id)
+
+    for item in order.order_items:
+        rating = Rating(user_id=user_id, product_id=item.product_id, order_id=order.id, stars=stars)
+        db.session.add(rating)
+
+    db.session.commit()
+    flash("Thanks for your rating!", "success")
+    return redirect(url_for('dashboard'))
 # ---------- Run ----------
-if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-    app.run(debug=True)
+if __name__ == "__main__":
+    app.run()

@@ -173,3 +173,26 @@ th, td {
 #services{
     display: none;
 }
+/* ⭐ Star Rating Styles */
+.star-rating {
+  direction: rtl;
+  font-size: 2rem;
+}
+
+.star-rating input[type="radio"] {
+  display: none;
+}
+
+.star-rating label {
+  color: lightgray;
+  cursor: pointer;
+}
+
+.star-rating input:checked ~ label {
+  color: gold;
+}
+
+.star-rating label:hover,
+.star-rating label:hover ~ label {
+  color: orange;
+}

@@ -2,9 +2,36 @@
 {% block content %}
 <section class="section">
     <div class="container">
-        
+        <h2 class="title is-3">✅ Order Confirmed</h2>
         <p>Your order has been placed successfully.</p>
-        <a href="{{ url_for('track_order', order_id=order_id) }}">Track your order</a>
+        <a href="{{ url_for('track_order', order_id=order_id) }}" class="button is-info is-small">Track your order</a>
+
+        <hr>
+
+        {% if submitted_rating %}
+            <h3 class="title is-4">⭐ Your Submitted Rating</h3>
+            <div>
+                {% for i in range(submitted_rating.stars) %}
+                    <span style="font-size: 1.5rem; color: gold;">&#9733;</span>
+                {% endfor %}
+                {% for i in range(5 - submitted_rating.stars) %}
+                    <span style="font-size: 1.5rem; color: lightgray;">&#9733;</span>
+                {% endfor %}
+            </div>
+            <p style="margin-top: 8px; color: #444;">Thanks for sharing your feedback!</p>
+        {% else %}
+            <h3>🌟 Rate Your Experience</h3>
+<form action="{{ url_for('submit_rating', order_id=order_id) }}" method="POST">
+  <div class="star-rating">
+    {% for i in range(1, 6) %}
+    <input type="radio" id="star{{ i }}" name="stars" value="{{ i }}" required>
+    <label for="star{{ i }}">&#9733;</label>
+    {% endfor %}
+  </div>
+  <br>
+  <button type="submit" class="button is-link">Submit Rating</button>
+</form>
+        {% endif %}
     </div>
 </section>
 {% endblock %}
