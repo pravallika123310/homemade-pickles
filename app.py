@@ -54,6 +54,7 @@ def login():
 
         if user and check_password_hash(user.password, password):
             session['user_id'] = user.id
+            session['username'] = user.username  
             session['is_admin'] = user.is_admin
             flash("Login successful.", "success")
             return redirect(url_for('dashboard'))
@@ -229,4 +230,4 @@ def submit_rating(order_id):
     flash("Thanks for your rating!", "success")
     return redirect(url_for('dashboard'))
 if __name__ == "__main__":
-    app.run()
+    app.run(debug=True)

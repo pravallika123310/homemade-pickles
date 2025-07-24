@@ -86,25 +86,46 @@ def logout():
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    user_id = session['user_id']
-    is_admin = session.get('is_admin', False)
-
+    user = get_current_user()
+    if not user:
+        return redirect(url_for('login'))
+    username = user['username']
+    is_admin = user['is_admin']
     if is_admin:
-        products = appdata_table.scan(
-            FilterExpression=Key('PK').begins_with('PRODUCT#')
-        ).get('Items', [])
+        all_items = appdata_table.scan()['Items']
+        users = [item for item in all_items if item.get('SK', '').startswith('PROFILE#') and not item.get('is_admin')]
+        products = [item for item in all_items if item.get('PK', '').startswith('PRODUCT#') and item.get('SK') == 'DETAILS']
+        orders = [item for item in all_items if item.get('SK') == 'DETAILS' and item.get('PK', '').startswith('ORDER#')]
+        feedbacks = [item for item in all_items if item.get('PK', '').startswith('FEEDBACK#')]
+        product_ratings = {}
+        for product in products:
+            product_id = product['PK'].split('#')[1]
+            rating_response = appdata_table.query(
+                KeyConditionExpression=Key('PK').eq(f'RATING#{product_id}')
+            )
+            rating_items = rating_response.get('Items', [])
 
-        orders = appdata_table.scan(
-            FilterExpression=Key('PK').begins_with('ORDER#')
-        ).get('Items', [])
+            if rating_items:
+                total_rating = sum(item.get('rating', 0) for item in rating_items)
+                avg_rating = round(total_rating / len(rating_items), 1)
+            else:
+                avg_rating = 0.0  
 
-        return render_template('admin_dashboard.html', products=products, orders=orders)
+            product_ratings[product_id] = avg_rating
+        return render_template(
+            'admin_dashboard.html',
+            users=users,
+            products=products,
+            orders=orders,
+            feedbacks=feedbacks,
+            product_ratings=product_ratings
+        )
     else:
-        orders = appdata_table.scan(
-            FilterExpression=Key('PK').begins_with('ORDER#') & Key('SK').eq('DETAILS')
-        ).get('Items', [])
-        user_orders = [o for o in orders if o.get('user_id') == user_id]
-        return render_template('customer_dashboard.html', orders=user_orders)
+        orders = appdata_table.query(
+            KeyConditionExpression=Key('PK').eq(f'ORDER#{username}')
+        )['Items']
+        return render_template('customer_dashboard.html', user=user, orders=orders)
+
 
 @app.route('/products')
 @login_required
@@ -124,14 +145,23 @@ def add_product():
     name = request.form['name']
     price = float(request.form['price'])
     product_id = str(uuid.uuid4())
+    description = request.form.get('description')
+    category = request.form.get('category')
+    quantity = int(request.form.get('quantity', 1))
+    user_id = session['user_id']
 
     appdata_table.put_item(Item={
-        'PK': f'PRODUCT#{product_id}',
-        'SK': 'DETAILS',
-        'product_id': product_id,
-        'name': name,
-        'price': Decimal(str(price))
-    })
+    'PK': f'PRODUCT#{product_id}',
+    'SK': 'DETAILS',
+    'product_id': product_id,
+    'name': name,
+    'price': Decimal(str(price)),
+    'description': description,
+    'category': category,
+    'quantity': quantity,
+    'created_by': user_id,
+    'created_at': datetime.datetime.now().isoformat()
+})
 
     flash("Product added!", "success")
     return redirect(url_for('products'))
@@ -231,27 +261,48 @@ def track_order(order_id):
         return redirect(url_for('dashboard'))
     return render_template('track_order.html', order=order)
 
-@app.route('/submit-rating/<string:order_id>', methods=['POST'])
+@app.route('/remove-from-cart/<string:product_id>', methods=['POST'])
+@login_required
+def remove_from_cart(product_id):
+    user_id = session['user_id']
+    try:
+        appdata_table.delete_item(
+            Key={
+                'PK': f'CART#{user_id}',
+                'SK': f'PRODUCT#{product_id}'
+            }
+        )
+        flash("Item removed from cart.", "info")
+    except Exception as e:
+        flash("Failed to remove item.", "danger")
+        print("Delete error:", str(e))
+    return redirect(url_for('cart'))
+
+
+@app.route('/submit-rating/<order_id>', methods=['POST'])
 @login_required
 def submit_rating(order_id):
+    rating = int(request.form['rating'])
     user_id = session['user_id']
-    stars = int(request.form['stars'])
-    order = appdata_table.get_item(Key={'PK': f'ORDER#{order_id}', 'SK': 'DETAILS'}).get('Item')
+    response = appdata_table.get_item(Key={
+        'PK': f'ORDER#{order_id}',
+        'SK': 'DETAILS'
+    })
+    order = response.get('Item')
     if not order:
-        flash("Invalid order.", "danger")
+        flash("Order not found", "danger")
         return redirect(url_for('dashboard'))
-
-    for item in order['items']:
+    for item in order.get('items', []):
         product_id = item['product_id']
         appdata_table.put_item(Item={
-            'PK': f'PRODUCT#{product_id}',
-            'SK': f'RATING#{user_id}',
-            'stars': stars,
+            'PK': f'RATING#{product_id}',
+            'SK': f'USER#{user_id}',
+            'product_id': product_id,
             'user_id': user_id,
-            'order_id': order_id
+            'rating': rating,
+            'timestamp': datetime.now().isoformat()
         })
-
-    flash("Thanks for your feedback!", "success")
+    flash("Thank you for your rating!", "success")
     return redirect(url_for('dashboard'))
 
 @app.route('/services')
