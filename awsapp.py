@@ -61,20 +61,31 @@ def register():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        email = request.form.get('email')  
+        email = request.form.get('email')
         password = request.form.get('password')
-        user = User.query.filter_by(email=email).first()
 
-        if user and check_password_hash(user.password, password):
-            session['user_id'] = user.id
-            session['username'] = user.username  
-            session['is_admin'] = user.is_admin
+        try:
+            response = users_table.get_item(Key={'email': email})
+        except Exception as e:
+            flash("Login failed. Please try again later.", "error")
+            print("DynamoDB error:", e)
+            return redirect(url_for('login'))
+
+        user = response.get('Item')
+
+        if user and check_password_hash(user['password'], password):
+            session['user_id'] = user['user_id']
+            session['username'] = user['username']
+            session['is_admin'] = (user.get('role') == 'admin')
+            session['email'] = user['email']
             flash("Login successful.", "success")
             return redirect(url_for('dashboard'))
         else:
             flash("Invalid email or password.", "error")
             return redirect(url_for('login'))
+
     return render_template('login.html')
+
 
 @app.route('/logout')
 def logout():
