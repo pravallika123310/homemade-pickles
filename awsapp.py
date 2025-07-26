@@ -61,19 +61,18 @@ def register():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        email = request.form.get('email')
+        email = request.form.get('email')  
         password = request.form.get('password')
-        response = users_table.get_item(Key={'email': email})
-        user = response.get('Item')
+        user = User.query.filter_by(email=email).first()
 
-        if user and check_password_hash(user['password'], password):
-            session['user_id'] = user['user_id']
-            session['email'] = user['email']
-            session['is_admin'] = (user['role'] == 'admin')
-            flash("Login successful!", "success")
+        if user and check_password_hash(user.password, password):
+            session['user_id'] = user.id
+            session['username'] = user.username  
+            session['is_admin'] = user.is_admin
+            flash("Login successful.", "success")
             return redirect(url_for('dashboard'))
         else:
-            flash("Invalid credentials", "danger")
+            flash("Invalid email or password.", "error")
             return redirect(url_for('login'))
     return render_template('login.html')
 
