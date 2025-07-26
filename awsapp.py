@@ -10,7 +10,7 @@ from boto3.dynamodb.conditions import Key
 AWS_REGION = 'us-east-1'
 USERS_TABLE_NAME = 'Users'
 APPDATA_TABLE_NAME = 'AppData'
-SNS_TOPIC_ARN = "arn:aws:sns:us-east-1:123456789012:PickleOrderUpdates"  
+SNS_TOPIC_ARN = "arn:aws:sns:us-east-1:418272775181:PickleOrderUpdates"  
 
 app = Flask(__name__)
 app.secret_key = 'your_super_secret_key_here'
